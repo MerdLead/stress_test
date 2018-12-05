@@ -546,8 +546,8 @@ class SQLCollection(MysqlAction):
         self.execute_sql_only(sql)
 
 # ===================================== 星星积分部分 ============================================================
-    def add_student_score_star(self, student_id, vanclass_id, key, value):
+    def add_student_score_star(self, student_id, key, value):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sql = 'INSERT INTO `user_student_data`(user_account_id, `key`,key_id, `value`, created_at, updated_at) ' \
-              'VALUES("{0}","{1}", 0,"{2}", "{3}","{4}")'.format(student_id, vanclass_id, key, value, now, now)
+              'VALUES("{0}","{1}", 0,"{2}", "{3}","{4}")'.format(student_id, key, value, now, now)
         self.execute_sql_only(sql)
