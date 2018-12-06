@@ -4,6 +4,7 @@ from multiprocessing.pool import Pool
 from conf import config
 from stress_point.common import CommonAction
 from stress_point.homework_action import HomeWorkAction
+import numpy
 
 
 class WordBookAction:
@@ -91,11 +92,29 @@ class WordBookAction:
         for sfi in fluency_list:
             self.common.add_word_student_fluency_record(sfi)
 
+
+    @staticmethod
+    def get_fluency_wordbank_ids(id_list):
+        print("单词个数:", len(id_list))
+        if len(id_list) > 30:
+            remainder = -(len(id_list) % 30)
+            residual_list = id_list[remainder:]
+            reset_list = list(set(id_list).difference(set(residual_list)))
+            split_fluency = numpy.reshape(reset_list, (int(len(reset_list) / 30), 30))
+            split_array = [','.join(list(map(str, x))) for x in split_fluency]
+            split_array.append(','.join(list(map(str, residual_list))))
+            return split_array
+        else:
+            return [','.join(list(map(str, id_list)))]
+
     def add_word_homework_student_record(self, student_id, fluency_list, wordbank_list):
         """添加word_homework_record数据（学生查看词书进度用得到）"""
-        fluency_ids = ','.join(fluency_list)
-        wordbank_ids = ','.join(wordbank_list)
-        self.common.add_word_homework_student_record(student_id, wordbank_ids, fluency_ids, len(fluency_list))
+        fluency_id_array = self.get_fluency_wordbank_ids(fluency_list)
+        wordbank_id_array = self.get_fluency_wordbank_ids(wordbank_list)
+
+        for i in range(len(fluency_id_array)):
+            self.common.add_word_homework_student_record(student_id,  wordbank_id_array[i], fluency_id_array[i],
+                                                         len(fluency_id_array[i].split(',')))
 
     def get_label_name_parent_id(self, label_id):
         """获取标签的父级id"""
@@ -141,19 +160,22 @@ class WordBookAction:
 
     def add_student_word_data(self, student_list, label_list, sys_wordbank_id, label_homework_info, sys_label):
         """将单词布置给学生"""
-        for student_id in student_list: 
-            self.common.add_user_student_data(student_id, 'student_label_id', sys_label)  # 添加key为student_label_id数据
+        for student_id in student_list:
+            student_label_id = self.common.find_data_studnet_label_id(student_id)
+            if len(student_label_id) == 0:
+                self.common.add_user_student_data(student_id, 'student_label_id', sys_label)  # 添加key为student_label_id数据
+
             for label_id in label_list:
+                is_system = 1 if label_id in sys_wordbank_id else 0  # is_system 判断
+                self.common.add_word_homework_student(config.CLASS_ID, student_id, label_homework_info[label_id],
+                                                      label_id, is_system)
+
+                self.add_word_student_fluency(student_id, label_homework_info[label_id], is_system, label_id, 1)
+
                 print('学生id', student_id, '词书id', label_id, ' 作业id', label_homework_info[label_id])
                 result = self.get_student_fluency_ids(student_id, label_id)  # 学生下的fluency_record
                 fluency_id_list = result[0]
                 wordbank_id_list = result[1]
-                is_system = 1 if label_id in sys_wordbank_id else 0  # is_system 判断
-
-                self.common.add_word_homework_student(config.CLASS_ID, student_id, label_homework_info[label_id], label_id,
-                                                      is_system)
-
-                self.add_word_student_fluency(student_id, label_homework_info[label_id], is_system, label_id, 1)
 
                 self.add_student_fluency_record(fluency_id_list)  # 添加fluency_record数据
 
@@ -161,6 +183,9 @@ class WordBookAction:
 
     def run(self):
         student_list = ['52385']
+
+        # 删除学生单词数据
+        self.delete_word_data(student_list)
         # student_list = self.common.get_class_student()   # 学生列表
         labels = self.get_label_id()
         new_label_list = labels[0]   # 标签列表
@@ -176,12 +201,8 @@ class WordBookAction:
 
         print('词书id:', new_label_list)
 
-
-        # 删除学生单词数据
-        # self.delete_word_data(student_list)
-
         # 添加或获取词书对应的作业
-        label_homework_info = self.add_word_homework(new_label_list, sys_wordbank_id)  # 获取到的label与homework，以dict形式
+        label_homework_info = self.add_word_homework(new_label_list, sys_wordbank_id)
 
         # 给学生添加单词
         self.add_student_word_data(student_list, new_label_list, sys_wordbank_id, label_homework_info, sys_label)

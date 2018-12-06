@@ -454,7 +454,7 @@ class SQLCollection(MysqlAction):
         """在学生数据表中添加一条key为student_label_id的数据"""
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sql = 'INSERT INTO `user_student_data`(user_account_id, `key`,key_id, `value`, created_at, updated_at) ' \
-              'VALUES("{0}","{1}","{2}", 0, "{3}","{4}")'.format(student_id, key, value, now, now)
+              'VALUES("{0}","{1}", 0,"{2}","{3}","{4}")'.format(student_id, key, value, now, now)
         self.execute_sql_only(sql)
 
     def add_word_homework(self, name, teacher_id, class_id):
