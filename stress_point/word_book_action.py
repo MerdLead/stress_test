@@ -3,7 +3,6 @@ from multiprocessing.pool import Pool
 
 from conf import config
 from stress_point.common import CommonAction
-from stress_point.homework_action import HomeWorkAction
 import numpy
 
 
@@ -91,7 +90,6 @@ class WordBookAction:
         """添加fluency_record数据"""
         for sfi in fluency_list:
             self.common.add_word_student_fluency_record(sfi)
-
 
     @staticmethod
     def get_fluency_wordbank_ids(id_list):
@@ -186,6 +184,7 @@ class WordBookAction:
 
         # 删除学生单词数据
         self.delete_word_data(student_list)
+        student_list = ['52385']
         # student_list = self.common.get_class_student()   # 学生列表
         labels = self.get_label_id()
         new_label_list = labels[0]   # 标签列表

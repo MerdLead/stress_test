@@ -435,7 +435,7 @@ class SQLCollection(MysqlAction):
 
     def find_sys_wordbank_id(self):
         """查询所有的系统标签"""
-        sql = 'SELECT `wordbank_label_id` FROM  label_student_wordbank_map'
+        sql = 'SELECT `wordbank_label_id` FROM  label_student_wordbank_map where type="system"'
         return self.execute_sql_return_result(sql)
 
     def find_sys_homework_id_by_wordbank(self, wordbank_label_id):
